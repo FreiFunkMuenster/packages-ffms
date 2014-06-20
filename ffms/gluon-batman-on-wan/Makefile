@@ -36,7 +36,7 @@ define Build/Compile
 endef
 
 define Package/gluon-batman-on-wan/install
-	$(GLUON_GENERATE) ./generate/* $(1)/
+	$(CP) ./files/* $(1)/
 
 	$(INSTALL_DIR) $(1)/lib/gluon
 endef
