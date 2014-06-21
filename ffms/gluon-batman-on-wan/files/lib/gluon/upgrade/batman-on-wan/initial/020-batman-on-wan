@@ -1,11 +1,19 @@
-#!/bin/sh
+#!/usr/bin/lua
 
-. /lib/functions.sh
+local site = require 'gluon.site_config'
+local sysconfig = require 'gluon.sysconfig'
+local uci = require 'luci.model.uci'
 
-uci_add network interface mesh_wan
-uci_set network mesh_wan ifname 'br-wan'
-uci_set network mesh_wan proto 'batadv'
-uci_set network mesh_wan mesh 'bat0'
-uci_set network mesh_wan auto @batman_on_wan@
+local c = uci.cursor()
 
-uci_commit network
+c:section('network', 'interface', 'mesh_wan',
+	{
+		ifname = 'br-wan',
+		proto = 'batadv',
+		mesh = 'bat0',
+		auto = site.batman_on_wan,
+	}
+)
+
+c:save('network')
+c:commit('network')
