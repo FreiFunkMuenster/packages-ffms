@@ -11,7 +11,7 @@ define Package/gluon-luci-switch-to-wan
   SECTION:=gluon
   CATEGORY:=Gluon
   TITLE:=Option to bridge the switch to the WAN port
-  DEPENDS:=+gluon-config-mode-core
+  DEPENDS:=+gluon-core
 endef
 
 define Build/Prepare
