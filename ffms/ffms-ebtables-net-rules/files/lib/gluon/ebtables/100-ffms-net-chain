@@ -1,0 +1,1 @@
+chain('FFMS_NET_ONLY', 'DROP')
