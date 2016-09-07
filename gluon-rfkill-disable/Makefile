@@ -11,7 +11,6 @@ define Package/gluon-rfkill-disable
   SECTION:=gluon
   CATEGORY:=Freifunk Muenster
   TITLE:=rfkill-disable
-  DEPENDS:=+gluon-core
 endef
 
 define Build/Prepare
