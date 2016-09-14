@@ -7,7 +7,7 @@ local util = require 'luci.util'
 local site = require 'gluon.site_config'
 local sysconfig = require 'gluon.sysconfig'
 
-local macaddr = uci:get('network', 'bat0', 'macaddr')
+local macaddr = uci:get_first('tunneldigger', 'broker', 'uuid')
 local hostname = uci:get_first("system", "system", "hostname")
 local msg = i18n.translate('gluon-config-mode:macaddr')
 
