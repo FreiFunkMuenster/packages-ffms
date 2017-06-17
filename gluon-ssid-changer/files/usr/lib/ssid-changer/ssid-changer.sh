@@ -30,19 +30,19 @@ fi
 
 if [ $GATEWAY_TQ -gt $UPPER_LIMIT ];
 then
-	echo "Gateway TQ is $GATEWAY_TQ node is online"
+	echo "Gateway TQ is $GATEWAY_TQ, node is online"
 	for HOSTAPD in $(ls /var/run/hostapd-phy*); do # check status for all physical devices
 		CURRENT_SSID=`grep "^ssid=$ONLINE_SSID" $HOSTAPD | cut -d"=" -f2`
 		if [ $CURRENT_SSID == $ONLINE_SSID ]
 		then
-			echo "SSID $CURRENT_SSID is correct, noting to do"
+			echo "SSID $CURRENT_SSID is correct, nothing to do"
 			HUP_NEEDED=0
 			break
 		fi
 		CURRENT_SSID=`grep "^ssid=$OFFLINE_SSID" $HOSTAPD | cut -d"=" -f2`
 		if [ $CURRENT_SSID == $OFFLINE_SSID ]
 		then
-			logger -s -t "gluon-offline-ssid" -p 5 "TQ is $GATEWAY_TQ, SSID is $CURRENT_SSID, change to $ONLINE_SSID" #Write Info to Syslog
+			logger -s -t "gluon-offline-ssid" -p 5 "TQ is $GATEWAY_TQ, SSID is $CURRENT_SSID, change to $ONLINE_SSID" # write info to syslog
 			sed -i s/^ssid=$CURRENT_SSID/ssid=$ONLINE_SSID/ $HOSTAPD
 			HUP_NEEDED=1 # HUP here would be too early for dualband devices
 		else
@@ -53,12 +53,12 @@ fi
 
 if [ $GATEWAY_TQ -lt $LOWER_LIMIT ];
 then
-	echo "Gateway TQ is $GATEWAY_TQ node is considered offline"
+	echo "Gateway TQ is $GATEWAY_TQ, node is considered offline"
 	for HOSTAPD in $(ls /var/run/hostapd-phy*); do # check status for all physical devices
 		CURRENT_SSID=`grep "^ssid=$OFFLINE_SSID" $HOSTAPD | cut -d"=" -f2`
 		if [ $CURRENT_SSID == $OFFLINE_SSID ]
 		then
-			echo "SSID $CURRENT_SSID is correct, noting to do"
+			echo "SSID $CURRENT_SSID is correct, nothing to do"
 			HUP_NEEDED=0
 			break
 		fi
