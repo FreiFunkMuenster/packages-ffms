@@ -11,7 +11,7 @@ define Package/gluon-config-mode-show-mac
   SECTION:=gluon
   CATEGORY:=Freifunk Muenster
   TITLE:=Shows the primary MAC on the reboot page
-  DEPENDS:=gluon-config-mode-core-virtual +gluon-mesh-vpn-tunneldigger +gluon-config-mode-mesh-vpn
+  DEPENDS:=gluon-config-mode-core +gluon-mesh-vpn-tunneldigger +gluon-config-mode-mesh-vpn
 endef
 
 define Build/Prepare
