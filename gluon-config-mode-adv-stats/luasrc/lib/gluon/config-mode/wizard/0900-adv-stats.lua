@@ -2,9 +2,7 @@ return function(form, uci)
 	local pkg_i18n = i18n 'gluon-config-mode-adv-stats'
 
 	local msg = pkg_i18n.translate(
-		'Here you can enable advanced statistics for your node on'
-		'https://grafana.freifunk-muensterland.de'
-	)
+		'Here you can enable advanced statistics for your node on https://grafana.freifunk-muensterland.de')
 
 	local s = form:section(Section, nil, msg)
 

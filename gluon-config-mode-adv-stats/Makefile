@@ -4,11 +4,11 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=gluon-config-mode-adv-stats
 PKG_VERSION:=1
 
-include ../gluon.mk
+include $(INCLUDE_DIR)/package.mk
 
-define Package/gluon-config-mode-adv-stats
+define Package/$(PKG_NAME)
   TITLE:=Toggle adv-stats
     DEPENDS:=+gluon-config-mode-core
     endef
 
-$(eval $(call BuildPackageGluon,gluon-config-mode-adv-stats))
+$(eval $(call BuildPackage,$(PKG_NAME)))

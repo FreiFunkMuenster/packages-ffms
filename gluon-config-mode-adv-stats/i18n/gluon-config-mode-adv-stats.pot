@@ -2,6 +2,5 @@ msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
 msgid ""
-"Here you can enable advanced statistics for your node on"
-"https://grafana.freifunk-muensterland.de"
+"Here you can enable advanced statistics for your node on https://grafana.freifunk-muensterland.de"
 msgstr ""

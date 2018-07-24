@@ -1,13 +1,14 @@
+
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=gluon-adv-stats
 PKG_VERSION:=1
 
-include ../gluon.mk
+include $(INCLUDE_DIR)/package.mk
 
-define Package/gluon-adv-stats
+define Package/$(PKG_NAME)
   TITLE:=Provides a uci value to respondd
     DEPENDS:=+gluon-core +respondd
     endef
 
-$(eval $(call BuildPackageGluon,gluon-adv-stats))
+$(eval $(call BuildPackage,$(PKG_NAME)))
