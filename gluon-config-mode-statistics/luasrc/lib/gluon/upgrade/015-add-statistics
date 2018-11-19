@@ -1,0 +1,10 @@
+#!/usr/bin/lua
+
+local uci = require('simple-uci').cursor()
+
+if not uci:get_first("gluon-node-info", "advstats") then 
+uci:add("gluon-node-info", "advstats")
+local advuci = uci:get_first("gluon-node-info", "advstats")
+uci:set("gluon-node-info", advuci , "enabled", false)
+uci:commit('gluon-node-info')
+end
