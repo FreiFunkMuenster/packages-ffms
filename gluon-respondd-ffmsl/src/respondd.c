@@ -87,7 +87,7 @@ static struct json_object * get_hostname(void) {
 
 	struct uci_section *s = ptr.s;
 
-	const char *hostname = uci_lookup_option_string(ctx, s, "pretty_hostname");
+ 	const char *hostname = uci_lookup_option_string(ctx, s, "pretty_hostname");
 
 	if (!hostname)
 		hostname = uci_lookup_option_string(ctx, s, "hostname");
@@ -115,21 +115,14 @@ static struct json_object * get_advanced_stats(void) {
 
         struct uci_section *s = ptr.s;
 
-        const char *stradvstats = uci_lookup_option_string(ctx, s, "enabled");
-
-	if (!stradvstats || strcmp(stradvstats, "1"))
-		storeStats = json_object_new_boolean(0);
-	else
-		storeStats = json_object_new_boolean(1);
-
-	json_object_object_add(ret, "store-stats", storeStats);
+        const char *advstats = uci_lookup_option_string(ctx, s, "enabled");
+        json_object_object_add(ret, "store-stats", json_object_new_boolean(advstats && !strcmp(advstats, "1")));
 
 error:
         uci_free_context(ctx);
 
         return ret;
 }
-
 
 static struct json_object * respondd_provider_nodeinfo(void) {
 	struct json_object *ret = json_object_new_object();
