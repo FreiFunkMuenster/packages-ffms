@@ -1,0 +1,2 @@
+config advstats
+	option enabled '0'
