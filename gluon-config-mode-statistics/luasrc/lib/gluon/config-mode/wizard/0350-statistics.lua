@@ -16,6 +16,7 @@ return function(form, uci)
 	
 	function a:write(data)
 		uci:set("gluon-advanced-config", advuci , "enabled", data)
+		uci:commit("gluon-advanced-config")
 	end
 
 	return {'advstats'}
