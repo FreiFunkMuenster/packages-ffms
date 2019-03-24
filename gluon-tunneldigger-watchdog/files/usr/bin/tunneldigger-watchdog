@@ -1,8 +1,8 @@
 #!/usr/bin/lua
 
 local uci = require('simple-uci').cursor()
-local enabled = uci:get_first('tunneldigger', 'broker', 'enabled')
-io.popen('logger -t tunneldiger-watchdog "runned"')
+local enabled = uci:get('tunneldigger', 'mesh_vpn', 'enabled')
+
 if enabled then
         local handleBatctl = io.popen("batctl o |grep mesh-vpn |wc -l")
         local resultBatctl = handleBatctl:read("*l")
