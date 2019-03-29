@@ -1,51 +1,33 @@
 #!/usr/bin/lua
 
+function restartTunneldigger()
+        io.popen('logger -t tunneldigger-watchdog "Try to restart Tunneldigger."')
+        os.execute("/etc/init.d/tunneldigger restart")
+end
+
+function readPidFile()
+        local pidFile = io.open("/var/run/tunneldigger.mesh-vpn.pid", "r")
+        local returnPid = "0"
+        if pidFile~=nil then
+                returnPid = pidFile:read("*l")
+                io.close(pidFile)
+        end
+        return returnPid
+end
+
 local uci = require('simple-uci').cursor()
-local enabled = uci:get('tunneldigger', 'mesh_vpn', 'enabled')
+local enabled = uci:get_bool('tunneldigger', 'mesh_vpn', 'enabled')
 
 if enabled then
-        local handleBatctl = io.popen("batctl o |grep mesh-vpn |wc -l")
-        local resultBatctl = handleBatctl:read("*l")
-        handleBatctl:close()
-
-        local handleProcessGrep = io.popen("pgrep tunneldigger | head -n 1")
-        local resultProcessGrep = handleProcessGrep:read("*l")
-        handleProcessGrep:close()
-        io.popen('logger -t tunneldiger-watchdog "Batctl:#'.. resultBatctl ..'#"')
-        io.popen('logger -t tunneldiger-watchdog "ProcessGrep'.. resultProcessGrep ..'"')
-        local f = io.open("/var/run/tunneldigger.mesh-vpn.pid", "r")
-        if f==nil then
-                io.popen('logger -t tunneldiger-watchdog "PID-Datei existiert nicht"')
-                restartTunneldigger()
-                return
-        end
-        local tunneldiggerPidFile = f:read "*l"
-        f:close()
-        if not resultProcessGrep == tunneldiggerPidFile then
-                io.popen('logger -t tunneldiger-watchdog "PID-Komisch"')
-                restartTunneldigger()
-                return
-        end
-        if resultBatctl == "0" then
-                io.popen('logger -t tunneldiger-watchdog "Keine Mesh nachbarn"')
-                restartTunneldigger()
-                return
-        end
-end
-
-
-function restartTunneldigger()
-        io.popen('/etc/init.d/tunneldigger stop')
-        sleep(1)
-        io.popen('killall -KILL tunneldigger')
-        io.popen('rm -f /var/run/tunneldigger.mesh-vpn.pid')
-        sleep(5)
-        io.popen('/etc/init.d/tunneldigger start')
-        io.popen('logger -t tunneldigger-watchdog "Tunneldigger deamon or mesh neigbours not found. Try to start it again."')
-end
-
-function sleep(s)
-  local ntime = os.time() + s
-  repeat until os.time() > ntime
-end
-
+        local processPid = io.popen("pgrep tunneldigger | head -n 1"):read("*l")
+        if io.popen("pgrep tunneldigger | head -n 1"):read("*l") ~= readPidFile() then
+                print("Unstimmigkeit mit .pid-File und Prozessliste")                 
+                restartTunneldigger()                                
+                return               
+        end           
+        if io.popen("batctl o |grep mesh-vpn |wc -l"):read("*l") == "0" then
+                print("Keine Mesh-Nachbarn")                                
+                restartTunneldigger()       
+                return               
+        end           
+end   
