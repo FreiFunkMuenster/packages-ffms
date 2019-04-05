@@ -1,33 +1,51 @@
 #!/usr/bin/lua
 
 function restartTunneldigger()
-        io.popen('logger -t tunneldigger-watchdog "Try to restart Tunneldigger."')
-        os.execute("/etc/init.d/tunneldigger restart")
+	io.popen('logger -t tunneldigger-watchdog "Try to restart Tunneldigger."')
+	os.execute("/etc/init.d/tunneldigger restart")
 end
 
 function readPidFile()
-        local pidFile = io.open("/var/run/tunneldigger.mesh-vpn.pid", "r")
-        local returnPid = "0"
+	local pidFile = io.open("/var/run/tunneldigger.mesh-vpn.pid", "r")
+	local returnPid = "0"
+	if pidFile~=nil then 
+		returnPid = pidFile:read("*l") 
+		io.close(pidFile)
+	end
+	return returnPid
+end
+
+function getNeighbourCount()
+        local orginatorFile = io.open("/sys/kernel/debug/batman_adv/bat0/originators", "r")
+        local returnNeighbours = 0
         if pidFile~=nil then
-                returnPid = pidFile:read("*l")
-                io.close(pidFile)
+		local lineExists = true
+		while lineExists do
+			line = orginatorFile:read()
+			print (line)
+        		if line == nil then
+				lineExists = false
+				break
+			elseif string.match(line,"mesh-vpn") then
+                		returnNeighbours=returnNeighbours+1
+		        end
+		end
+                io.close(orginatorsFile)
         end
-        return returnPid
+        return returnNeighbours
 end
 
 local uci = require('simple-uci').cursor()
-local enabled = uci:get_bool('tunneldigger', 'mesh_vpn', 'enabled')
-
+local enabled = uci:get_bool('tunneldigger', 'mesh_vpn', 'enabled') 
 if enabled then
-        local processPid = io.popen("pgrep tunneldigger | head -n 1"):read("*l")
-        if io.popen("pgrep tunneldigger | head -n 1"):read("*l") ~= readPidFile() then
-                print("Unstimmigkeit mit .pid-File und Prozessliste")                 
-                restartTunneldigger()                                
-                return               
-        end           
-        if io.popen("batctl o |grep mesh-vpn |wc -l"):read("*l") == "0" then
-                print("Keine Mesh-Nachbarn")                                
-                restartTunneldigger()       
-                return               
-        end           
-end   
+	if io.popen("pgrep tunneldigger"):read("*l") ~= readPidFile() then
+		io.popen('logger -t tunneldigger-watchdog "Process-Pid doesn`t match with pid-File."')
+		restartTunneldigger()
+		return
+	end
+        if getNeighbourCount() == 0 then
+		io.popen('logger -t tunneldigger-watchdog "No mesh neighbours."')
+		restartTunneldigger()
+		return
+        end
+end
