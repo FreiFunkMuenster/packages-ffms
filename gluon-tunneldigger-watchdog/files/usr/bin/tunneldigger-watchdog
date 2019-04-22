@@ -16,22 +16,16 @@ function readPidFile()
 end
 
 function getNeighbourCount()
-        local orginatorFile = io.open("/sys/kernel/debug/batman_adv/bat0/originators", "r")
+        local list = io.lines("/sys/kernel/debug/batman_adv/bat0/originators")
         local returnNeighbours = 0
-        if pidFile~=nil then
-		local lineExists = true
-		while lineExists do
-			line = orginatorFile:read()
-			print (line)
-        		if line == nil then
-				lineExists = false
-				break
-			elseif string.match(line,"mesh-vpn") then
-                		returnNeighbours=returnNeighbours+1
-		        end
-		end
-                io.close(orginatorsFile)
+        if list~=nil then
+                for line in list do
+                        if string.find(line,"[  mesh-vpn]:") then
+                                returnNeighbours=returnNeighbours+1
+                        end
+                end
         end
+        print(returnNeighbours)
         return returnNeighbours
 end
 
