@@ -1,7 +1,7 @@
 #!/usr/bin/lua
 
 function restartTunneldigger()
-	io.popen('logger -t tunneldigger-watchdog "Try to restart Tunneldigger."')
+	io.popen('logger -t tunneldigger-watchdog "Restarting Tunneldigger."')
 	os.execute("/etc/init.d/tunneldigger restart")
 end
 
@@ -17,28 +17,26 @@ end
 
 function getNeighbourCount()
         local list = io.lines("/sys/kernel/debug/batman_adv/bat0/originators")
-        local returnNeighbours = 0
         if list~=nil then
                 for line in list do
-                        if string.find(line,"[  mesh-vpn]:") then
-                                returnNeighbours=returnNeighbours+1
+                        if line:find('mesh%-vpn') then
+                                return 1
                         end
                 end
         end
-        print(returnNeighbours)
-        return returnNeighbours
+        return nil
 end
 
 local uci = require('simple-uci').cursor()
-local enabled = uci:get_bool('tunneldigger', 'mesh_vpn', 'enabled') 
-if enabled then
+local tunneldiggerEnabled = uci:get_bool('tunneldigger', 'mesh_vpn', 'enabled') 
+if tunneldiggerEnabled then
 	if io.popen("pgrep tunneldigger"):read("*l") ~= readPidFile() then
 		io.popen('logger -t tunneldigger-watchdog "Process-Pid doesn`t match with pid-File."')
 		restartTunneldigger()
 		return
 	end
-        if getNeighbourCount() == 0 then
-		io.popen('logger -t tunneldigger-watchdog "No mesh neighbours."')
+        if getNeighbourCount() ~= 1 then
+		io.popen('logger -t tunneldigger-watchdog "No vpn-mesh neighbours found."')
 		restartTunneldigger()
 		return
         end
