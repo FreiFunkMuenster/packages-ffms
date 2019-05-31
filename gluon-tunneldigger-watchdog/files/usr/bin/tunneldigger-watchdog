@@ -31,7 +31,7 @@ local uci = require('simple-uci').cursor()
 local tunneldiggerEnabled = uci:get_bool('tunneldigger', 'mesh_vpn', 'enabled') 
 if tunneldiggerEnabled then
 	if io.popen("pgrep tunneldigger"):read("*l") ~= readPidFile() then
-		io.popen('logger -t tunneldigger-watchdog "Process-Pid doesn`t match with pid-File."')
+		io.popen('logger -t tunneldigger-watchdog "Process-Pid does not match with pid-File."')
 		restartTunneldigger()
 		return
 	end
