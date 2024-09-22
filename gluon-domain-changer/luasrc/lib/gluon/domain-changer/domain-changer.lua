@@ -74,8 +74,7 @@ if remote_url ~= nil then
 			log(string.format("Found node provisioning entry for mac %s",mac))
 			for setting_key, setting_value in pairs(v) do
 				if setting_key == "target_domain" then
-					if change_domain(setting_value) then
-					end
+					change_domain(setting_value)
 				elseif setting_key == "location_lat" then
 					if change_location_lat(tonumber(setting_value)) then
 						uci:commit('gluon-node-info')

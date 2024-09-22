@@ -4,7 +4,7 @@ local uci = require('simple-uci').cursor()
 
 if site.domain_changer then
   uci:delete('gluon-domain-changer', 'settings')
-  uci:section('gluon-domain-changer', 'settings', 'settings' {
+  uci:section('gluon-domain-changer', 'settings', 'settings', {
     url = site.domain_changer.url,
   })
   uci:commit('gluon-domain-changer')
