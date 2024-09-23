@@ -13,11 +13,7 @@ local function log(msg)
 end
 
 local function change_domain(new_domain)
-	local current_domain = uci:get('gluon', 'core', 'domain')
-	if current_domain == nil then
-		log('Could not read current domain. Maybe not multidomain Firmware?')
-		return false
-	elseif not current_domain == new_domain then
+	if new_domain ~= uci:get('gluon', 'core', 'domain') then
 		local change_command = string.format('gluon-switch-domain %s', new_domain)
 		log(string.format('Running command "%s"',change_command))
 		os.execute(change_command)
@@ -70,10 +66,10 @@ end
 if remote_url ~= nil then
 	os.execute(string.format('uclient-fetch %s -q -O /tmp/node_provisioning.json',remote_url))
 	local parsed_node_provisioning = assert(json.load("/tmp/node_provisioning.json"))
-	for k, v in pairs(parsed_node_provisioning) do
-		if k == mac then
+	for key, value in pairs(parsed_node_provisioning) do
+		if key == mac then
 			log(string.format("Found node provisioning entry for mac %s",mac))
-			for setting_key, setting_value in pairs(v) do
+			for setting_key, setting_value in pairs(value) do
 				if setting_key == "target_domain" then
 					change_domain(setting_value)
 				elseif setting_key == "location_lat" then
