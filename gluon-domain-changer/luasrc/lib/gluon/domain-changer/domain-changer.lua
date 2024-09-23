@@ -4,7 +4,8 @@ local uci = require('simple-uci').cursor()
 local json = require 'jsonc'
 local mac = uci:get('network', 'client', 'macaddr'):gsub(':', '')
 local location = uci:get_first('gluon-node-info', 'location')
-local remote_url = uci:get('gluon-domain-changer','settings', 'url')
+local uci_domain_changer = e:get_first("gluon-domain-changer", "domain-changer")
+local remote_url = uci:get('gluon-domain-changer', uci_domain_changer, 'url')
 
 local function log(msg)
 	os.execute(string.format('logger -t dom-changer "%s"', tostring(msg)))
