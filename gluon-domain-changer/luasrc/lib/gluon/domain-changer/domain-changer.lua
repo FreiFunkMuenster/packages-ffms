@@ -4,16 +4,21 @@ local uci = require('simple-uci').cursor()
 local json = require 'jsonc'
 local mac = uci:get('network', 'client', 'macaddr'):gsub(':', '')
 local location = uci:get_first('gluon-node-info', 'location')
-local uci_domain_changer = e:get_first("gluon-domain-changer", "domain-changer")
+local uci_domain_changer = uci:get_first("gluon-domain-changer", "domain-changer")
 local remote_url = uci:get('gluon-domain-changer', uci_domain_changer, 'url')
+local current_domain = uci:get('gluon', 'core', 'domain')
 
 local function log(msg)
 	os.execute(string.format('logger -t dom-changer "%s"', tostring(msg)))
-	print(tostring(msg))
+end
+
+function sleep(n)
+  log(string.format('Sleeping for %s seconds', n))
+  os.execute("sleep " .. tonumber(n))
 end
 
 local function change_domain(new_domain)
-	if new_domain ~= uci:get('gluon', 'core', 'domain') then
+	if new_domain ~= current_domain then
 		local change_command = string.format('gluon-switch-domain %s', new_domain)
 		log(string.format('Running command "%s"',change_command))
 		os.execute(change_command)
@@ -64,6 +69,8 @@ local function change_location_enabled(new_loc_enabled)
 end
 
 if remote_url ~= nil then
+	math.randomseed(math.floor(tonumber(string.match(current_domain, "%d+"))))
+	sleep(math.random(0,120))
 	os.execute(string.format('uclient-fetch %s -q -O /tmp/node_provisioning.json',remote_url))
 	local parsed_node_provisioning = assert(json.load("/tmp/node_provisioning.json"))
 	for key, value in pairs(parsed_node_provisioning) do
