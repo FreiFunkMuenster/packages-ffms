@@ -81,7 +81,8 @@ then
 fi
 
 if [ $HUP_NEEDED == 1 ]; then
-	killall -HUP hostapd # send HUP to all hostapd to load new SSID
+	#killall -HUP hostapd # send HUP to all hostapd to load new SSID
+	ubus call hostapd reload #HUPs dont work anymore so reload
 	HUP_NEEDED=0
 	echo "HUP!"
 fi
