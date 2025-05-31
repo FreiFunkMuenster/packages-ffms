@@ -1,0 +1,31 @@
+#!/usr/bin/lua
+
+local site = require 'gluon.site'
+local uci = require('simple-uci').cursor()
+
+if not site.eol_ssid.enabled(false) -- disabled for site/domain
+	or uci:get('eol-ssid', 'settings', 'enabled') == "0" -- present & disabled on router
+then
+	os.exit(0) -- do not change SSID
+end
+
+local eol_wifi_ssid = site.eol_ssid.ssid()
+
+if not site.eol_ssid.as_additional_ssid(false)
+        or uci:get('eol-ssid', 'settings', 'as_additional_ssid') == "0" -- lever for additional SSID
+then
+	uci:set('wireless', 'client_radio0', 'ssid', eol_wifi_ssid) -- set main SSID
+else
+	uci:section('wireless', 'wifi-iface', 'dep_radio0', { -- add additional SSID
+	        ifname = 'eolnotice0',
+        	network = 'client',
+        	disabled = '0',
+        	device = 'radio0',
+        	mode = 'ap',
+        	macaddr = macaddr,
+        	ssid = eol_wifi_ssid,
+	})
+
+end
+
+uci:save('wireless')

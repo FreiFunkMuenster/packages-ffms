@@ -1,0 +1,3 @@
+config eol-ssid 'settings'
+	option enabled '1'
+	option as_additional_ssid '1'
