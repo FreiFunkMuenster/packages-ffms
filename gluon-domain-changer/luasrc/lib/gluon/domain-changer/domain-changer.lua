@@ -33,7 +33,7 @@ local function change_location_lat(new_loc_lat)
 		log('Could not read current latitude location. Going to create it now!')
 		uci:set('gluon-node-info', location, 'latitude', new_loc_lat)
 		return true
-	elseif not current_lat == new_loc_lat then
+	elseif tonumber(current_lat) ~= new_loc_lat then
 		uci:set('gluon-node-info', location, 'latitude', new_loc_lat)
 		log(string.format('Changing uci-setting gluon-node-info.location.latitude from value "%f" to "%f"',current_lat,new_loc_lat))
 		return true
@@ -47,7 +47,7 @@ local function change_location_lng(new_loc_lng)
 		log('Could not read current longitude location. Going to create it now!')
 		uci:set('gluon-node-info', location, 'longitude', new_loc_lng)
 		return true
-	elseif not current_lng == new_loc_lng then
+	elseif tonumber(current_lng) ~= new_loc_lng then
 		uci:set('gluon-node-info', location, 'longitude', new_loc_lng)
 		log(string.format('Changing uci-setting gluon-node-info.location.longitude from value "%f" to "%f"',current_lng,new_loc_lng))
 		return true
@@ -69,8 +69,7 @@ local function change_location_enabled(new_loc_enabled)
 end
 
 if remote_url ~= nil then
-	math.randomseed(math.floor(tonumber(string.match(current_domain, "%d+"))))
-	sleep(math.random(0,120))
+	sleep(math.floor(tonumber(string.match(current_domain, "%d+")))*10)
 	os.execute(string.format('uclient-fetch %s -q -O /tmp/node_provisioning.json',remote_url))
 	local parsed_node_provisioning = assert(json.load("/tmp/node_provisioning.json"))
 	for key, value in pairs(parsed_node_provisioning) do
@@ -98,3 +97,4 @@ if remote_url ~= nil then
 else
 	log("remote url isn't set in uci")
 end
+
