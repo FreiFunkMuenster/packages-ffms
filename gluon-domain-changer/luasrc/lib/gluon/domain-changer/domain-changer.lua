@@ -2,99 +2,89 @@
 
 local uci = require('simple-uci').cursor()
 local json = require 'jsonc'
-local mac = uci:get('network', 'client', 'macaddr'):gsub(':', '')
+
+local mac = (uci:get('network', 'client', 'macaddr') or ''):gsub(':', '')
 local location = uci:get_first('gluon-node-info', 'location')
 local uci_domain_changer = uci:get_first("gluon-domain-changer", "domain-changer")
 local remote_url = uci:get('gluon-domain-changer', uci_domain_changer, 'url')
 local current_domain = uci:get('gluon', 'core', 'domain')
 
 local function log(msg)
+	print(tostring(msg))
 	os.execute(string.format('logger -t dom-changer "%s"', tostring(msg)))
 end
 
-function sleep(n)
-  log(string.format('Sleeping for %s seconds', n))
-  os.execute("sleep " .. tonumber(n))
+local function sleep(seconds)
+	log(string.format('Sleeping for %s seconds', seconds))
+	os.execute("sleep " .. tonumber(seconds))
 end
 
 local function change_domain(new_domain)
-	if new_domain ~= current_domain then
-		local change_command = string.format('gluon-switch-domain %s', new_domain)
-		log(string.format('Running command "%s"',change_command))
-		os.execute(change_command)
+	if new_domain and new_domain ~= current_domain then
+		local cmd = 'gluon-switch-domain ' .. new_domain
+		log('Running command "' .. cmd .. '"')
+		os.execute(cmd)
 		return true
 	end
 	return false
 end
 
-local function change_location_lat(new_loc_lat)
-	local current_lat = uci:get('gluon-node-info', location, 'latitude')
-	if current_lat == nil then
-		log('Could not read current latitude location. Going to create it now!')
-		uci:set('gluon-node-info', location, 'latitude', new_loc_lat)
-		return true
-	elseif not current_lat == new_loc_lat then
-		uci:set('gluon-node-info', location, 'latitude', new_loc_lat)
-		log(string.format('Changing uci-setting gluon-node-info.location.latitude from value "%f" to "%f"',current_lat,new_loc_lat))
+local function change_location_field(field, new_value)
+	local current_value = uci:get('gluon-node-info', location, field)
+	if current_value == nil then
+		log('Creating ' .. field .. ' with value ' .. tostring(new_value))
+		uci:set('gluon-node-info', location, field, new_value)
 		return true
 	end
-	return false
-end
 
-local function change_location_lng(new_loc_lng)
-	local current_lng = uci:get('gluon-node-info', location, 'longitude')
-	if current_lng == nil then
-		log('Could not read current longitude location. Going to create it now!')
-		uci:set('gluon-node-info', location, 'longitude', new_loc_lng)
-		return true
-	elseif not current_lng == new_loc_lng then
-		uci:set('gluon-node-info', location, 'longitude', new_loc_lng)
-		log(string.format('Changing uci-setting gluon-node-info.location.longitude from value "%f" to "%f"',current_lng,new_loc_lng))
-		return true
-	end
-	return false
-end
-
-local function change_location_enabled(new_loc_enabled)
-	local current_loc_enabled = uci:get_bool('gluon-node-info', location, 'share_location')
-	if current_loc_enabled == nil then
-		log('Could not read current location enabled.')
-		return false
-	elseif not current_loc_enabled == new_loc_enabled then
-		uci:set('gluon-node-info', location, 'share_location', new_loc_enabled)
-		log(string.format('Changing uci-setting gluon-node-info.location.share_location from value "%s" to "%s"',tostring(current_loc_enabled),tostring(new_loc_enabled)))
-		return true
-	end
-	return false
-end
-
-if remote_url ~= nil then
-	math.randomseed(math.floor(tonumber(string.match(current_domain, "%d+"))))
-	sleep(math.random(0,120))
-	os.execute(string.format('uclient-fetch %s -q -O /tmp/node_provisioning.json',remote_url))
-	local parsed_node_provisioning = assert(json.load("/tmp/node_provisioning.json"))
-	for key, value in pairs(parsed_node_provisioning) do
-		if key == mac then
-			log(string.format("Found node provisioning entry for mac %s",mac))
-			for setting_key, setting_value in pairs(value) do
-				if setting_key == "target_domain" then
-					change_domain(setting_value)
-				elseif setting_key == "location_lat" then
-					if change_location_lat(tonumber(setting_value)) then
-						uci:commit('gluon-node-info')
-					end
-				elseif setting_key == "location_lng" then
-					if change_location_lng(tonumber(setting_value)) then
-						uci:commit('gluon-node-info')
-					end
-				elseif setting_key == "location_enabled" then
-					if change_location_enabled(setting_value) then
-						uci:commit('gluon-node-info')
-					end
-				end
-			end
+	-- Für share_location als Boolean behandeln
+	if field == "share_location" then
+		local current_bool = uci:get_bool('gluon-node-info', location, field)
+		if current_bool == nil then
+			log('Could not read current share_location')
+			return false
+		elseif current_bool ~= new_value then
+			uci:set('gluon-node-info', location, field, new_value)
+			log(string.format('Changing %s from "%s" to "%s"', field, tostring(current_bool), tostring(new_value)))
+			return true
+		end
+	else
+		-- Bei lat/lng als Zahlen vergleichen
+		local current_num = tonumber(current_value)
+		if current_num ~= tonumber(new_value) then
+			uci:set('gluon-node-info', location, field, new_value)
+			log(string.format('Changing %s from "%s" to "%s"', field, tostring(current_value), tostring(new_value)))
+			return true
 		end
 	end
+	return false
+end
+
+if remote_url then
+	local domain_number = tonumber(string.match(current_domain or "", "%d+")) or 0
+	sleep(domain_number * 10)
+
+	local fetch_cmd = string.format('uclient-fetch %s -q -O /tmp/node_provisioning.json', remote_url)
+	os.execute(fetch_cmd)
+
+	local provisioning = assert(json.load("/tmp/node_provisioning.json"))
+
+	if provisioning[mac] then
+		log("Found node provisioning entry for mac " .. mac)
+		for k, v in pairs(provisioning[mac]) do
+			if k == "target_domain" then
+				change_domain(v)
+			elseif k == "location_lat" then
+				if change_location_field('latitude', tonumber(v)) then uci:commit('gluon-node-info') end
+			elseif k == "location_lng" then
+				if change_location_field('longitude', tonumber(v)) then uci:commit('gluon-node-info') end
+			elseif k == "location_enabled" then
+				if change_location_field('share_location', v) then uci:commit('gluon-node-info') end
+			end
+		end
+	else
+		log("No provisioning entry found for mac " .. mac)
+	end
 else
-	log("remote url isn't set in uci")
+	log("Remote URL not set in uci")
 end
