@@ -1,0 +1,30 @@
+#!/bin/sh
+
+# Read current UCI values
+enabled=$(uci get gluon.mesh_vpn.limit_enabled 2>/dev/null)
+ingress=$(uci get gluon.mesh_vpn.limit_ingress 2>/dev/null)
+egress=$(uci get gluon.mesh_vpn.limit_egress 2>/dev/null)
+
+# Define minimum thresholds
+min_ingress=10000
+min_egress=5000
+
+# Check and enforce minimum limits if enabled
+if [ "$enabled" = "1" ]; then
+    changed=0
+
+    if [ "$ingress" -lt "$min_ingress" ]; then
+        uci set gluon.mesh_vpn.limit_ingress="$min_ingress"
+        changed=1
+    fi
+
+    if [ "$egress" -lt "$min_egress" ]; then
+        uci set gluon.mesh_vpn.limit_egress="$min_egress"
+        changed=1
+    fi
+
+    if [ "$changed" -eq 1 ]; then
+        uci commit gluon.mesh_vpn
+        echo "Mesh-VPN bandwidth limits adjusted to minimum values."
+    fi
+fi
