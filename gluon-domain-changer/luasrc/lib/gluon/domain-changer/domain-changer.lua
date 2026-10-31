@@ -19,12 +19,19 @@ local SERIAL_FILE = '/var/run/domain-changer.serial'
 local MAX_DELAY = 600
 local MAX_SIZE = 1024 * 1024
 
+-- uci:get liefert bei fehlender Option (nil, Fehlermeldung); ohne Begrenzung auf den
+-- ersten Wert wuerde tonumber() die Fehlermeldung als Zahlenbasis erhalten
+local function get_number(config, sec, option)
+	local value = uci:get(config, sec, option)
+	return tonumber(value)
+end
+
 local node_id = util.node_id()
 local section = uci:get_first(CONFIG, 'domain-changer')
 local remote_url = uci:get(CONFIG, section, 'url')
 local pubkeys = uci:get_list(CONFIG, section, 'pubkey')
-local good_signatures = tonumber(uci:get(CONFIG, section, 'good_signatures')) or 1
-local stored_serial = tonumber(uci:get(CONFIG, section, 'serial')) or 0
+local good_signatures = get_number(CONFIG, section, 'good_signatures') or 1
+local stored_serial = get_number(CONFIG, section, 'serial') or 0
 local current_domain = uci:get('gluon', 'core', 'domain')
 
 local function shell_quote(s)
@@ -206,7 +213,7 @@ local function set_coordinate(location, field, new_value)
 	if new_value == nil then
 		return false
 	end
-	local current_value = tonumber(uci:get('gluon-node-info', location, field))
+	local current_value = get_number('gluon-node-info', location, field)
 	if current_value and string.format('%.6f', current_value) == string.format('%.6f', new_value) then
 		return false
 	end
