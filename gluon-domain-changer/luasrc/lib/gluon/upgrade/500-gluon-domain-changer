@@ -2,8 +2,10 @@
 local site = require('gluon.site')
 local uci = require('simple-uci').cursor()
 
-if site.domain_changer then
+if site.domain_changer() then
   local uci_domain_changer = uci:get_first('gluon-domain-changer', 'domain-changer')
   uci:set('gluon-domain-changer', uci_domain_changer, 'url', site.domain_changer.url())
+  uci:set_list('gluon-domain-changer', uci_domain_changer, 'pubkey', site.domain_changer.pubkeys())
+  uci:set('gluon-domain-changer', uci_domain_changer, 'good_signatures', site.domain_changer.good_signatures(1))
   uci:commit('gluon-domain-changer')
 end
